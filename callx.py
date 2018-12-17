@@ -11,6 +11,7 @@ from enum import Enum
 # GUID ActiveX компонента
 TrueConfCallX_Class = '{27EF4BA2-4500-4839-B88A-F2F4744FE56A}'
 
+
 class State(Enum):
     Unknown = 0
     Connect = 1
@@ -28,7 +29,7 @@ class CallXWidget(QObject):
 
     def __init__(self, view, server: str, user: str, password: str, camera_index: int = 0):
         super().__init__()
-        
+
         self.view = view
         # connection & authorization
         self.server = server
@@ -37,8 +38,8 @@ class CallXWidget(QObject):
         self.camera_index = camera_index
 
         # текущее состояние
-        self.state = State.Unknown;
-        self.prev_state = State.Unknown;
+        self.state = State.Unknown
+        self.prev_state = State.Unknown
         # Создаем компонент "TrueConf SDK for Windows" aka CallX
         self.ocx = QAxWidget(TrueConfCallX_Class)
 
@@ -108,7 +109,7 @@ class CallXWidget(QObject):
         print("**OnIncomingChatMessage")
         print('From userID "{}" Display name "{}": "{}"'.format(peerId, peerDn, message))
 
-    def _OnXChangeState (self, prevState, newState):
+    def _OnXChangeState(self, prevState, newState):
         try:
             print("**OnXChangeState {} -> {}".format(State(prevState), State(newState)))
             self.state = State(newState)

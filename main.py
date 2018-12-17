@@ -7,18 +7,23 @@ from PyQt5.QtMultimedia import *
 import sys
 from PyQt5.Qt import QVideoWidget, QUrl, Qt
 from callx import CallXWidget, State
+import os.path
 
-# заголовок окна
+# ================================================================
+# Required variables: server IP, user_id (TrueConf ID), password
+# ================================================================
+SERVER = ''
+USER = ''
+PASSWORD = ''
+# Video
+PROMO_VIDEO_FILE = '---.avi'  # As example: 'c:\\video\\promo.avi'
+# ================================================================
+
+# Title
 TITLE = "CallX Python Example: Video Kiosk"
-# Промо
-PROMO_VIDEO_FILE = '---.avi'
 
-# параметры подключения: сервер, user_id (TrueConf ID), пароль
-SERVER = '---'
-USER = '---'
-PASSWORD = '---'
 
-# класс главного окна
+# Main Window
 class KioskWidget(QWidget):
 
     def __init__(self):
@@ -27,15 +32,12 @@ class KioskWidget(QWidget):
         self.video = None
         self.player = None
         self.playlist = None
-        
+
         QAxWidget.__init__(self)
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle(TITLE)
-        #self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowSystemMenuHint)
-        #rc = QRect(100, 100, 640, 480)
-        #self.setGeometry(rc)
         self.showMaximized()
         # layout
         self.layout = QHBoxLayout(self)
@@ -47,13 +49,16 @@ class KioskWidget(QWidget):
         self.video = QVideoWidget(self)
         self.player = QMediaPlayer(self)
         self.player.setVideoOutput(self.video)
-        # set media content
-        self.media_file = QUrl.fromLocalFile(PROMO_VIDEO_FILE)
-        self.mediaContent = QMediaContent(self.media_file)
-        self.playlist = QMediaPlaylist()
-        self.playlist.addMedia(self.mediaContent)
-        self.playlist.setPlaybackMode(QMediaPlaylist.Loop);
-        self.player.setPlaylist(self.playlist)
+        # set media content if exist a video file
+        if os.path.isfile(PROMO_VIDEO_FILE):
+            self.media_file = QUrl.fromLocalFile(PROMO_VIDEO_FILE)
+            self.mediaContent = QMediaContent(self.media_file)
+            self.playlist = QMediaPlaylist()
+            self.playlist.addMedia(self.mediaContent)
+            self.playlist.setPlaybackMode(QMediaPlaylist.Loop)
+            self.player.setPlaylist(self.playlist)
+        else:
+            print('Video file not exist')
         # init
         self.showPromo(False)
         # connect to signals
@@ -64,6 +69,10 @@ class KioskWidget(QWidget):
         self.showPromo(new_state in [State.Normal])
 
     def showPromo(self, is_show: bool):
+        # check a video content first
+        if not self.playlist:
+            return
+
         if is_show:
             self.layout.removeWidget(self.callx_widget.ocx)
             self.callx_widget.ocx.hide()
@@ -79,7 +88,12 @@ class KioskWidget(QWidget):
 # end of class CallXWindow(QWidget)
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    MainWindow = KioskWidget()
-    MainWindow.show()
-    sys.exit(app.exec_())
+    # Check required variables
+    if (not SERVER) or (not USER) or (not PASSWORD):
+        print('Please set variables for connection and authorization: SERVER, USER, PASSWORD.')
+        sys.exit()
+    else:
+        app = QApplication(sys.argv)
+        MainWindow = KioskWidget()
+        MainWindow.show()
+        sys.exit(app.exec_())
