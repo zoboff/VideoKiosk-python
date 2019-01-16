@@ -22,6 +22,12 @@ class State(Enum):
     Close = 6
 # end of class State(Enum)
 
+# cut a long string
+def cut80symbols(data: str):
+    s = data
+    if len(s) > 80:
+        s = s[0:76] + '...'
+    return s
 
 # класс контейнер для ActiveX
 class CallXWidget(QObject):
@@ -46,6 +52,8 @@ class CallXWidget(QObject):
         # =====================================================================
         # подключаем некоторые события ActiveX компонента CallX
         # =====================================================================
+        # Нотификация о различных событиях
+        self.ocx.OnXNotify[str].connect(self._OnXNotify)
         # Событие № 1: сигнализирует об окончании инициализации компонента
         # это событие говорит о готовности CallX к работе
         self.ocx.OnXAfterStart.connect(self._OnXAfterStart)
@@ -66,9 +74,47 @@ class CallXWidget(QObject):
         # Изменение состояния
         # Важное событие, в котором определяется текущее состояние:
         #   залогинен, в конференции и пр.
+        #   эмит сигнала stateChanged 
         self.ocx.OnXChangeState[int, int].connect(self._OnXChangeState)
+        # Завершение работы
+        self.ocx.OnXTerminate.connect(self._OnXTerminate)
+        # Ошибка загрузки
+        self.ocx.OnXStartFail.connect(self._OnXStartFail)
+        # Обновление списка адресной книги
+        self.ocx.OnAbookUpdate[str].connect(self._OnAbookUpdate)
+        # 
+        self.ocx.OnAppUpdateAvailable[str].connect(self._OnAppUpdateAvailable)
+        # Изменение раскладки
+        self.ocx.OnChangeVideoMatrixReport[str].connect(self._OnChangeVideoMatrixReport)
+        # Создание конференции
+        self.ocx.OnConferenceCreated[str].connect(self._OnConferenceCreated)
+        # Окончание конференции
+        self.ocx.OnConferenceDeleted[str].connect(self._OnConferenceDeleted)
+        # ---
+        self.ocx.OnContactBlocked[str].connect(self._OnContactBlocked)
+        # Удаление контакта из адресной книги
+        self.ocx.OnContactDeleted[str].connect(self._OnContactDeleted)
+        # ---
+        self.ocx.OnContactUnblocked[str].connect(self._OnContactUnblocked)
+        # ---
+        self.ocx.OnHardwareChanged[str].connect(self._OnHardwareChanged)
+        # Получение детальной информации о пользователе
+        self.ocx.OnDetailInfo[str].connect(self._OnDetailInfo)
+        # Получение детальной информации о пользователе
+        self.ocx.OnDeviceModesDone[str].connect(self._OnDeviceModesDone)    
 
+    def __del__(self):
+        print('delete CallXWidget.')
+        self.ocx.shutdown()
+
+    # =====================================================================
     # Events
+    # =====================================================================
+    def _OnXNotify(self, data):
+        #print("**OnXNotify")
+        #print(cut80symbols(data))
+        pass
+        
     def _OnXAfterStart(self):
         print("**OnXAfterStart")
         # Выбор устройств: просто выбираем первые в списке оборудования
@@ -115,9 +161,64 @@ class CallXWidget(QObject):
             self.state = State(newState)
             self.prev_state = State(prevState)
             self.stateChanged.emit(State(prevState), State(newState))
+            if State(newState) == State.Normal:
+                self.ocx.getContactDetails(self.user) 
         except ValueError:
             pass
 
+    def _OnXTerminate(self):
+        print("**OnXTerminate")
+
+    def _OnXStartFail(self):
+        print("**OnXStartFail")
+
+    def _OnAbookUpdate(self, eventDetails):
+        print("**OnAbookUpdate")
+        print(cut80symbols(eventDetails))
+
+    def _OnAppUpdateAvailable(self, eventDetails):
+        print("**OnAppUpdateAvailable")
+        print(cut80symbols(eventDetails))
+
+    def _OnChangeVideoMatrixReport(self, eventDetails):
+        print("**OnChangeVideoMatrixReport")
+        print(cut80symbols(eventDetails))
+
+    def _OnConferenceCreated(self, eventDetails):
+        print("**OnConferenceCreated")
+        print(cut80symbols(eventDetails))
+
+    def _OnConferenceDeleted(self, eventDetails):
+        print("**OnConferenceDeleted")
+        print(cut80symbols(eventDetails))
+
+    def _OnContactBlocked(self, eventDetails):
+        print("**OnContactBlocked")
+        print(cut80symbols(eventDetails))
+
+    def _OnContactDeleted(self, eventDetails):
+        print("**OnContactDeleted")
+        print(cut80symbols(eventDetails))
+
+    def _OnContactUnblocked(self, eventDetails):
+        print("**OnContactUnblocked")
+        print(cut80symbols(eventDetails))
+
+    def _OnHardwareChanged(self, eventDetails):
+        print("**OnHardwareChanged")
+        print(cut80symbols(eventDetails))
+
+    def _OnDetailInfo(self, eventDetails):
+        print("**OnDetailInfo")
+        print(cut80symbols(eventDetails))
+
+    def _OnDeviceModesDone(self, eventDetails):
+        print("**OnDeviceModesDone")
+        print(eventDetails)
+
+    # =====================================================================
+    # Functions
+    # =====================================================================
     def getCameraList(self) -> list:
         lst = self.ocx.XGetCameraList()
         return lst.splitlines()

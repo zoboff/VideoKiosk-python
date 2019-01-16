@@ -39,6 +39,7 @@ class KioskWidget(QWidget):
     def initUI(self):
         self.setWindowTitle(TITLE)
         self.showMaximized()
+        #self.setGeometry(0, 0, 900, 700)
         # layout
         self.layout = QHBoxLayout(self)
         self.setLayout(self.layout)
@@ -58,7 +59,7 @@ class KioskWidget(QWidget):
             self.playlist.setPlaybackMode(QMediaPlaylist.Loop)
             self.player.setPlaylist(self.playlist)
         else:
-            print('Video file not exist')
+            print('Video file "{}" not exist'.format(PROMO_VIDEO_FILE))
         # init
         self.showPromo(False)
         # connect to signals
@@ -67,6 +68,8 @@ class KioskWidget(QWidget):
     def onStateChanged(self, prev_state, new_state):
         # show/hide promo
         self.showPromo(new_state in [State.Normal])
+        if new_state == State.Normal:
+            pass
 
     def showPromo(self, is_show: bool):
         # check a video content first
@@ -90,7 +93,7 @@ class KioskWidget(QWidget):
 if __name__ == '__main__':
     # Check required variables
     if (not SERVER) or (not USER) or (not PASSWORD):
-        print('Please set variables for connection and authorization: SERVER, USER, PASSWORD.')
+        print('Please set variables to connect and authorize. List variables: SERVER, USER, PASSWORD.')
         sys.exit()
     else:
         app = QApplication(sys.argv)
