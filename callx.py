@@ -81,8 +81,13 @@ class CallXWidget(QObject):
         # подключаем некоторые события ActiveX компонента CallX
         # =====================================================================
         # Нотификация о различных событиях
-        self.ocx.OnXNotify[str].connect(self.OnXNotify)
-        # Событие № 1: сигнализирует об окончании инициализации компонента
+        # здесь же проверим, установлен ли в системе CallX
+        try:
+            self.ocx.OnXNotify[str].connect(self.OnXNotify)
+        except AttributeError as attrError:
+            print("\nTrueConf SDK for Windows not installed.\n")
+            raise 
+        # Событие № 1 по очередности обработки: сигнализирует об окончании инициализации компонента
         # это событие говорит о готовности CallX к работе
         self.ocx.OnXAfterStart.connect(self.OnXAfterStart)
         # Подключились к серверу

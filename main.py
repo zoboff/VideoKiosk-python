@@ -12,9 +12,9 @@ import os.path
 # ================================================================
 # Required variables: server IP, user_id (TrueConf ID), password
 # ================================================================
-SERVER = ''
-USER = ''
-PASSWORD = ''
+SERVER = '' # server.name URL or server IP
+USER = '' #'<trueconf id>'
+PASSWORD = '' #'<password>'
 # Video
 PROMO_VIDEO_FILE = '---.avi'  # As example: 'c:\\video\\promo.avi'
 # ================================================================
@@ -44,7 +44,7 @@ class KioskWidget(QWidget):
         self.layout = QHBoxLayout(self)
         self.setLayout(self.layout)
         # CallX
-        self.callx_widget = CallXWidget(self, SERVER, USER, PASSWORD)
+        self.callx_widget = CallXWidget(self, SERVER, USER, PASSWORD, debug_mode=True)
         self.layout.addWidget(self.callx_widget.ocx)
         # promo video
         self.video = QVideoWidget(self)
@@ -64,12 +64,24 @@ class KioskWidget(QWidget):
         self.showPromo(False)
         # connect to signals
         self.callx_widget.stateChanged.connect(self.onStateChanged)
+        self.callx_widget.IncomingChatMessage.connect(self.onIncomingChatMessage)
 
+    # ============================================================================================
+    # Signals
+    # ============================================================================================
     def onStateChanged(self, prev_state, new_state):
         # show/hide promo
+        if self.callx_widget.debug_mode:
+            print('***Signal onStateChanged: "{}" -> "{}"'.format(prev_state, new_state))
         self.showPromo(new_state in [State.Normal])
         if new_state == State.Normal:
             pass
+
+    def onIncomingChatMessage(self, peerId, peerDn, message, time):
+        # show/hide promo
+        if self.callx_widget.debug_mode:
+            print('***Signal IncomingChatMessage: "{}", "{}"; "{}"; {}'.format(peerId, peerDn, message, time))
+    # ============================================================================================
 
     def showPromo(self, is_show: bool):
         # check a video content first
